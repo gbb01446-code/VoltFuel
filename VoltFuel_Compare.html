@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+  VoltFuel_Compare -- multi-flight comparison viewer for VoltFuel logs
+  Copyright (C) 2026 Masayuki
+  License: GNU General Public License, version 2 (see LICENSE).
+  Part of the VoltFuel project. The code was written with Claude
+  (Anthropic), an AI assistant.
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License version 2 as
+  published by the Free Software Foundation. It is distributed in the
+  hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  PURPOSE. See the GNU General Public License for more details.
+-->
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoltFuel_Compare - 複数フライト比較</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#0f1218;color:#e6e8ee;font:14px/1.5 "Segoe UI","Yu Gothic UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px;background:#1a1f2b}
+h1{font-size:16px;margin:0 10px 0 0}
+.btn,select{background:#2b3242;color:#e6e8ee;border:1px solid #3b4358;border-radius:6px;padding:5px 12px;cursor:pointer;font:inherit}
+.btn:hover{background:#38415a}
+#sel label{margin-right:10px}#sel select{border-left-width:4px}
+td input[type=number]{-moz-appearance:textfield;text-align:center}td input::-webkit-inner-spin-button{display:none}
+td button.sp{background:#2b3242;color:#e6e8ee;border:1px solid #3b4358;border-radius:4px;cursor:pointer;padding:1px 8px;font:inherit}
+#ymin,td input[type=number]{width:72px;background:#2b3242;color:#e6e8ee;border:1px solid #3b4358;border-radius:4px;padding:2px 4px;font:inherit}
+main{padding:12px 14px}
+#wrap{display:flex;flex-wrap:wrap;gap:8px}
+#wrap canvas{flex:1 1 100%;min-width:0;height:58vh;min-height:300px;background:#141822;border-radius:8px;cursor:crosshair;touch-action:none}
+#wrap canvas.sb{flex:1 1 380px}
+.hint{color:#8b93a7;font-size:12px;margin:6px 2px}
+table{border-collapse:collapse;width:100%;margin-top:8px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid #2b3242}
+th:first-child,td:first-child{text-align:left}
+th{color:#8b93a7;font-weight:normal}
+td i{display:inline-block;width:12px;height:12px;border-radius:3px;margin:0 8px 0 6px;vertical-align:-1px}
+#tip{position:fixed;display:none;pointer-events:none;background:#000c;border:1px solid #3b4358;border-radius:6px;padding:6px 9px;font-size:12px;z-index:9}
+body.drag{outline:3px dashed #46aaff;outline-offset:-6px}
+</style></head><body>
+<header>
+<h1>VoltFuel_Compare</h1>
+<label class="btn">CSVを選択<input id="fi" type="file" accept=".csv" multiple hidden></label>
+<label class="btn">フォルダを選択<input id="fd" type="file" webkitdirectory multiple hidden></label>
+<button class="btn" id="clr">クリア</button>
+<span id="sel"></span>
+<label>表示 <select id="md"><option value="ov">重ねる</option><option value="sb">横に並べる</option></select></label>
+<label style="color:#46aaff">Y1下限 <input id="ymin" type="number" step="0.1" placeholder="自動"></label>
+</header>
+<main>
+<div id="wrap"></div>
+<div class="hint">「横に並べる」はフライトごとに別のグラフになり、縦軸の目盛りと横軸の範囲は全グラフで共通です(拡大・移動も連動します)。色=項目(青=左軸、オレンジ・緑=右軸で同じ目盛り)、線の種類=フライト。ホイール=拡大縮小 / ドラッグ=移動 / ダブルクリック=全体表示。各フライトは開始時刻を0に揃えています。CSVはドロップしても読み込めます。表の「開始位置」「終了位置」は−/+ボタンか↑↓キーで5秒ずつ増減できます(終了位置は現在の終了秒数から増減)。開始位置はフライトを横軸上でずらし、終了位置はそこで打ち切ります。調整すると、横軸は表示中のフライトの開始〜終了の幅に合わせ直します。最小・平均・最大も調整後の範囲で計算します。</div>
+<table><thead id="th"></thead><tbody id="tb"></tbody></table>
+<div class="hint">各セルは「最小 / 平均 / 最大」で、現在グラフに表示している範囲の値です。</div>
+</main>
+<div id="tip"></div>
+<script>
+const $=id=>document.getElementById(id);
+const CC=['#46aaff','#ffaa32','#78e182'],DASH=[[],[9,4],[2,3],[10,3,2,3],[4,4,1,4]];
+const L=52,R=52,T=24,B=26;
+let F=[],ch=['','',''],view=null,hv=null,drag=null;
+const norm=s=>s.toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+/g,'');
+const esc=s=>s.replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const ft=s=>{const n=s<0?'-':'';s=Math.abs(s);const m=Math.floor(s/60);return n+m+':'+String(Math.floor(s-m*60)).padStart(2,'0')};
+const fv=v=>Math.abs(v)>=100?v.toFixed(0):Math.abs(v)>=10?v.toFixed(1):v.toFixed(2);
+function tsec(s){let m=s.match(/^(\d+):(\d+):(\d+)\.?(\d*)/),h=0,mi,se,fr;
+ if(m){h=+m[1];mi=+m[2];se=+m[3];fr=m[4]}else{m=s.match(/^(\d+):(\d+)\.?(\d*)/);if(!m)return NaN;mi=+m[1];se=+m[2];fr=m[3]}
+ return h*3600+mi*60+se+(fr?+('0.'+fr):0)}
+function parse(name,text){
+ const Ls=text.split(/\r?\n/).filter(Boolean);if(Ls.length<3)return null;
+ const H=Ls[0].split(','),ti=H.indexOf('Time'),n=Ls.length-1;
+ let cols=H.filter(h=>h&&h!=='Date'&&h!=='Time');
+ const idx=cols.map(c=>H.indexOf(c)),d={};cols.forEach(c=>d[c]=new Float64Array(n));
+ const t=new Float64Array(n);let per=0,off=0,prev=-1,t0=0;
+ for(let r=0;r<n;r++){
+  const f=Ls[r+1].split(','),ts=f[ti]||'';let s=tsec(ts),v;
+  if(isNaN(s))v=r?t[r-1]+t0+0.1:0;
+  else{if(!per)per=ts.split(':').length>2?86400:3600;if(s<prev)off+=per;prev=s;v=s+off}
+  if(!r)t0=v;t[r]=v-t0;
+  cols.forEach((c,k)=>{const x=f[idx[k]];d[c][r]=(x===undefined||x==='')?NaN:+x});
+ }
+ cols=cols.filter(c=>d[c].some(Number.isFinite));
+ let mn=null;const mi=cols.find(c=>norm(c)==='rmin');
+ if(mi){const y=d[mi];for(let r=n-1;r>=0;r--)if(y[r]&&isFinite(y[r])){mn=y[r];break}}
+ return{name,t,t0:t,d,cols,on:true,dur:t[n-1],off:0,end:null,min:mn}}
+async function addFiles(list){
+ for(const file of [...list]){
+  if(!/\.csv$/i.test(file.name))continue;
+  const f=parse(file.name.replace(/\.csv$/i,''),await file.text());if(!f)continue;
+  F=F.filter(x=>x.name!==f.name);F.push(f)}
+ F.sort((a,b)=>a.name<b.name?-1:1);view=null;refresh()}
+const act=()=>F.filter(f=>f.on);
+const KS=()=>[0,1,2].filter(k=>ch[k]&&ch[k]!=='_none');
+const has=(f,k)=>ch[k]&&ch[k]!=='_none'&&f.d[ch[k]];
+const fe=f=>Math.min(f.dur+f.off,f.end==null?1/0:f.end);
+const t0m=()=>{const a=act();return a.length?Math.min(...a.map(f=>f.off)):0};
+const tm=()=>Math.max(t0m()+1,...act().map(fe));
+const rng=()=>view?[view.x0,view.x1]:[t0m(),tm()];
+const sw=i=>`<svg width="34" height="10" style="margin:0 8px 0 6px"><line x1="0" y1="5" x2="34" y2="5" stroke="#ccc" stroke-width="2" stroke-dasharray="${DASH[i%5].join(' ')}"/></svg>`;
+function stat(f,k,a,b){const y=has(f,k)?f.d[ch[k]]:null;if(!y)return null;let mn=1/0,mx=-1/0,s=0,c=0;
+ for(let i=0;i<y.length;i++){if(f.t[i]<a||f.t[i]>b||f.t[i]>fe(f)||isNaN(y[i]))continue;const v=y[i];if(v<mn)mn=v;if(v>mx)mx=v;s+=v;c++}
+ return c?{mn,mx,av:s/c}:null}
+function refresh(){
+ const all=[...new Set(F.flatMap(f=>f.cols))];
+ [['rcel',1],['sbat',0],['rbat',0]].forEach(([w,must],k)=>{
+  if(ch[k]==='_none')return;
+  if(!all.includes(ch[k]))ch[k]=all.find(c=>norm(c)===w)||(k?'':all[0]||'')});
+ $('sel').innerHTML=['Y1 左軸','Y2 右軸','Y3 右軸'].map((n,k)=>
+  `<label style="color:${CC[k]}">${n} <select data-k=${k}>${k?'<option value="_none">(なし)</option>':''}${all.map(c=>`<option${c===ch[k]?' selected':''}>${esc(c)}</option>`).join('')}</select></label>`).join('');
+ draw();table()}
+const r1=x=>Math.round(x*10)/10,fx=f=>r1(f.end==null?f.dur+f.off:f.end);
+const pos=(i,k,v)=>`<button class=sp data-b=${k} data-n=${i} data-d=-5>−</button> <input type=number step=any value="${v}" data-${k}=${i}> <button class=sp data-b=${k} data-n=${i} data-d=5>+</button>`;
+function upd(){const[a,b]=rng();
+ F.forEach((f,i)=>KS().forEach(k=>{const c=document.querySelector(`[data-s="${i}-${k}"]`);if(!c)return;
+  const q=stat(f,k,a,b);c.textContent=q?`${fv(q.mn)} / ${fv(q.av)} / ${fv(q.mx)}`:'-'}))}
+function table(){const ks=KS();
+ $('th').innerHTML='<tr><th>フライト</th><th>時間</th><th>開始位置(秒)</th><th>終了位置(秒)</th><th>MinCv</th>'+ks.map(k=>`<th style="color:${CC[k]}">${esc(ch[k])}</th>`).join('')+'</tr>';
+ $('tb').innerHTML=F.map((f,i)=>`<tr><td><label><input type=checkbox data-i=${i}${f.on?' checked':''}>${sw(i)}${esc(f.name)}</label></td><td>${ft(f.dur)}</td><td>${pos(i,'o',f.off)}</td><td>${pos(i,'e',fx(f))}</td><td>${f.min==null?'-':f.min.toFixed(2)}</td>`+
+  ks.map(k=>`<td data-s="${i}-${k}"></td>`).join('')+'</tr>').join('');
+ upd()}
+function scale(ks,A,x0,x1){let lo=1/0,hi=-1/0;
+ for(const f of A)for(const k of ks){if(!has(f,k))continue;const y=f.d[ch[k]],e=Math.min(x1,fe(f));
+  for(let i=0;i<y.length;i++){if(f.t[i]<x0||f.t[i]>e)continue;const v=y[i];if(v<lo)lo=v;if(v>hi)hi=v}}
+ if(!isFinite(lo))return null;
+ if(hi-lo<1e-9)return[lo-1,hi+1];const p=(hi-lo)*.05;return[lo-p,hi+p]}
+let mode='ov';
+const wrap=$('wrap'),tip=$('tip');
+function sync(){
+ const n=mode==='ov'?1:Math.max(1,act().length);
+ if(wrap.dataset.m===mode&&wrap.children.length===n)return;
+ wrap.dataset.m=mode;wrap.innerHTML='';
+ for(let i=0;i<n;i++){const c=document.createElement('canvas');c.className=mode;bind(c);wrap.appendChild(c)}}
+const flightsOf=i=>mode==='ov'?act():[act()[i]].filter(Boolean);
+function draw(){
+ sync();const all=act(),ks=KS(),[x0,x1]=rng();
+ const sl=scale([0],all,x0,x1)||[0,1],sr=scale([1,2],all,x0,x1);
+ const ym=Math.round(parseFloat($('ymin').value)*10)/10;if(isFinite(ym)){sl[0]=ym;if(sl[1]<=ym)sl[1]=ym+1}
+ [...wrap.children].forEach((c,i)=>paint(c,flightsOf(i),all.length&&ks.length,sl,sr,x0,x1))}
+function paint(cv,A,ok,sl,sr,x0,x1){
+ const W=cv.clientWidth,H=cv.clientHeight,r=devicePixelRatio||1;
+ cv.width=W*r;cv.height=H*r;const g=cv.getContext('2d');g.setTransform(r,0,0,r,0,0);
+ const pw=W-L-R,ph=H-T-B,ks=KS();g.font='12px sans-serif';g.fillStyle='#8b93a7';
+ if(!ok){g.textAlign='center';g.fillText('CSVファイルを選択するか、ここにドロップしてください',W/2,H/2);return}
+ const X=t=>L+(t-x0)/(x1-x0)*pw,YL=v=>T+(sl[1]-v)/(sl[1]-sl[0])*ph,YR=v=>T+(sr[1]-v)/(sr[1]-sr[0])*ph;
+ const o1=ks.includes(1),o2=ks.includes(2),rc=(o1&&o2)?'#e6e8ee':o1?CC[1]:CC[2];
+ g.strokeStyle='#2b3242';
+ for(let i=0;i<=4;i++){const y=T+ph*i/4;g.beginPath();g.moveTo(L,y);g.lineTo(L+pw,y);g.stroke();
+  g.textAlign='right';g.fillStyle=CC[0];if(ks.includes(0))g.fillText(fv(sl[1]-(sl[1]-sl[0])*i/4),L-6,y+4);
+  if(sr){g.textAlign='left';g.fillStyle=rc;g.fillText(fv(sr[1]-(sr[1]-sr[0])*i/4),L+pw+6,y+4)}}
+ g.textAlign='center';g.fillStyle='#8b93a7';
+ for(let i=0;i<=5;i++){const t=x0+(x1-x0)*i/5,x=X(t);g.beginPath();g.moveTo(x,T);g.lineTo(x,T+ph);g.stroke();g.fillText(ft(t),x,H-8)}
+ g.save();g.beginPath();g.rect(L,T,pw,ph);g.clip();g.lineWidth=1.5;
+ for(const f of A){g.setLineDash(mode==='ov'?DASH[F.indexOf(f)%5]:[]);
+  for(const k of ks){if(!has(f,k)||(k&&!sr))continue;const y=f.d[ch[k]],Y=k?YR:YL,st=Math.max(1,Math.floor(y.length/(pw*3)));
+   g.strokeStyle=CC[k];g.beginPath();let pen=false;
+   for(let j=0;j<y.length;j+=st){const v=y[j];if(f.t[j]<x0||f.t[j]>x1||f.t[j]>fe(f))continue;
+    if(isNaN(v)){pen=false;continue}
+    pen?g.lineTo(X(f.t[j]),Y(v)):g.moveTo(X(f.t[j]),Y(v));pen=true}
+   g.stroke()}}
+ g.setLineDash([]);
+ if(hv!=null){g.strokeStyle='#ccc';g.beginPath();g.moveTo(X(hv),T);g.lineTo(X(hv),T+ph);g.stroke()}
+ g.restore();
+ if(mode==='sb'&&A[0]){g.textAlign='left';g.fillStyle='#e6e8ee';g.fillText(A[0].name.slice(0,20),6,16)}
+ const mt=minTitle(A);if(mt){g.textAlign='center';g.fillStyle='#e6e8ee';g.fillText(mt,W/2,16)}}
+function minTitle(A){const v=A.filter(f=>f.min!=null);if(!v.length)return'';
+ const u=[...new Set(v.map(f=>f.min.toFixed(2)))];
+ return u.length===1?'MinCv='+u[0]:'MinCv: '+v.map(f=>f.name+'='+f.min.toFixed(2)).join(' / ')}
+function at(f,t){let a=0,b=f.t.length-1;while(a<b){const m=(a+b+1)>>1;if(f.t[m]<=t)a=m;else b=m-1}return a}
+function bind(c){
+ const pwOf=()=>c.clientWidth-L-R;
+ c.onwheel=e=>{e.preventDefault();const[a,b]=rng(),T2=tm();
+  const p=Math.min(1,Math.max(0,(e.offsetX-L)/pwOf())),m=a+(b-a)*p,k=e.deltaY<0?.8:1.25;
+  const z=t0m(),n0=Math.max(z,m-(m-a)*k),n1=Math.min(T2,m+(b-m)*k);
+  if(n1-n0<.5)return;view=(n1-n0>=T2-z-.01)?null:{x0:n0,x1:n1};draw();upd()};
+ c.onpointerdown=e=>{drag={x:e.offsetX,r:rng()};c.setPointerCapture(e.pointerId)};
+ c.onpointerup=()=>drag=null;
+ c.ondblclick=()=>{view=null;draw();upd()};
+ c.onpointerleave=()=>{hv=null;tip.style.display='none';draw()};
+ c.onpointermove=e=>{const pw=pwOf();
+  if(drag){const[a,b]=drag.r,T2=tm(),d=(drag.x-e.offsetX)/pw*(b-a);let n0=a+d,n1=b+d;
+   const z=t0m();if(n0<z){n1+=z-n0;n0=z}if(n1>T2){n0-=n1-T2;n1=T2}
+   view={x0:Math.max(z,n0),x1:n1};draw();upd();return}
+  const[a,b]=rng(),t=a+(b-a)*(e.offsetX-L)/pw;if(t<a||t>b){hv=null;tip.style.display='none';draw();return}
+  hv=t;draw();
+  const list=flightsOf([...wrap.children].indexOf(c));
+  tip.innerHTML=`<b>${ft(t)}</b><br>`+list.map(f=>sw(F.indexOf(f))+esc(f.name)+': '+KS().map(k=>`<span style="color:${CC[k]}">${has(f,k)&&t>=f.off&&t<=fe(f)?fv(f.d[ch[k]][at(f,t)]):'-'}</span>`).join(' | ')).join('<br>');
+  tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+14)+'px'}}
+$('md').onchange=e=>{mode=e.target.value;draw()};
+$('sel').onchange=e=>{ch[+e.target.dataset.k]=e.target.value;view=null;draw();table()};
+$('ymin').oninput=()=>draw();
+$('ymin').onchange=e=>{const v=parseFloat(e.target.value);if(isFinite(v))e.target.value=(Math.round(v*10)/10).toFixed(1);draw()};
+function setPos(k,i,v){const f=F[i];
+ if(k==='o'){v=isFinite(v)?r1(v):0;f.off=v;f.t=f.t0.map(x=>x+v);if(f.end!=null&&f.end>=f.dur+v)f.end=null}
+ else{if(!isFinite(v)||v>=f.dur+f.off)f.end=null;else f.end=Math.max(f.off,r1(v))}
+ const q=n=>document.querySelector(`input[data-${n}="${i}"]`);q('o').value=f.off;q('e').value=fx(f);
+ view=null;draw();upd()}
+$('tb').onchange=e=>{const d=e.target.dataset;
+ if(d.o!==undefined)setPos('o',+d.o,parseFloat(e.target.value));
+ else if(d.e!==undefined)setPos('e',+d.e,parseFloat(e.target.value));
+ else{F[+d.i].on=e.target.checked;view=null;draw();upd()}};
+$('tb').onclick=e=>{const d=e.target.dataset;if(d.b===undefined)return;
+ const v=parseFloat(document.querySelector(`input[data-${d.b}="${d.n}"]`).value)||0;setPos(d.b,+d.n,v+ +d.d)};
+$('tb').onkeydown=e=>{const d=e.target.dataset,k=d.o!==undefined?'o':d.e!==undefined?'e':null;
+ if(k&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();setPos(k,+d[k],(parseFloat(e.target.value)||0)+(e.key==='ArrowUp'?5:-5))}};
+$('fi').onchange=e=>addFiles(e.target.files);
+$('fd').onchange=e=>addFiles(e.target.files);
+$('clr').onclick=()=>{F=[];view=null;refresh()};
+addEventListener('resize',draw);
+addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drag')});
+addEventListener('dragleave',()=>document.body.classList.remove('drag'));
+addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('drag');addFiles(e.dataTransfer.files)});
+refresh();
+</script></body></html>
