@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  VoltFuel_Tune -- MinCv tuning helper for VoltFuel logs
+  Copyright (C) 2026 Masayuki
+  License: GNU General Public License, version 2 (see LICENSE).
+  Part of the VoltFuel project. Contains per-cell voltage tables from
+  EdgeTX's BattAnalog widget (Copyright Offer Shmuely, GPLv2).
+  The code was written with Claude (Anthropic), an AI assistant.
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License version 2 as
+  published by the Free Software Foundation. It is distributed in the
+  hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  PURPOSE. See the GNU General Public License for more details.
+-->
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoltFuel_Tune - MinCv</title><style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--bd:#ccc;--ac:#087f5b;--bad:#c92a2a}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eee;--mut:#999;--bd:#444;--ac:#4cc9a0;--bad:#ff8080}}
+body{font:14px system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1050px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 4px}p,li{line-height:1.5}.m{color:var(--mut);font-size:12px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:2px}
+input,select,button{font:inherit;padding:5px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg)}
+#dz{border:2px dashed var(--bd);border-radius:10px;padding:18px;text-align:center;margin:8px 0}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--bd);padding:4px 6px;text-align:right;white-space:nowrap}th{color:var(--mut);font-weight:600}
+td:first-child,th:first-child{text-align:left}.rec{color:var(--ac);font-weight:700}.bad{color:var(--bad)}
+.box{border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin:12px 0}</style></head><body>
+<div style="display:flex;justify-content:space-between;align-items:start"><div><h1>VoltFuel_Tune <span class="m">(MinCv)</span></h1>
+<div class="m" id="priv"></div></div><button id="lg">EN</button></div>
+<div class="g">
+<label><span data-i="bt"></span><select id="bt"><option value="0">LiPo</option><option value="1">LiPo-HV</option><option value="2">Li-Ion</option><option value="3">LiFePO4</option></select></label>
+<label><span data-i="ce"></span><input id="ce" type="number" value="0" min="0" max="12"></label>
+<label>ResPct<input id="rs" type="number" value="35"></label><label>FallMv<input id="fa" type="number" value="50"></label>
+<label>MaxCv (×100)<input id="mx" type="number" value="410"></label>
+<label><span data-i="co"></span><select id="co"></select></label></div>
+<div id="dz"><span data-i="dz"></span><br><input id="fi" type="file" accept=".csv" multiple></div>
+<div id="out"></div>
+<div class="box m" id="nt"></div>
+<script>
+//CORE
+const TBL={"lipo":[[3.0,0],[3.093,1],[3.196,2],[3.301,3],[3.401,4],[3.477,5],[3.544,6],[3.601,7],[3.637,8],[3.664,9],[3.679,10],[3.683,11],[3.689,12],[3.692,13],[3.705,14],[3.71,15],[3.713,16],[3.715,17],[3.72,18],[3.731,19],[3.735,20],[3.744,21],[3.753,22],[3.756,23],[3.758,24],[3.762,25],[3.767,26],[3.774,27],[3.78,28],[3.783,29],[3.786,30],[3.789,31],[3.794,32],[3.797,33],[3.8,34],[3.802,35],[3.805,36],[3.808,37],[3.811,38],[3.815,39],[3.818,40],[3.822,41],[3.825,42],[3.829,43],[3.833,44],[3.836,45],[3.84,46],[3.843,47],[3.847,48],[3.85,49],[3.854,50],[3.857,51],[3.86,52],[3.863,53],[3.866,54],[3.87,55],[3.874,56],[3.879,57],[3.888,58],[3.893,59],[3.897,60],[3.902,61],[3.906,62],[3.911,63],[3.918,64],[3.923,65],[3.928,66],[3.939,67],[3.943,68],[3.949,69],[3.955,70],[3.961,71],[3.968,72],[3.974,73],[3.981,74],[3.987,75],[3.994,76],[4.001,77],[4.007,78],[4.014,79],[4.021,80],[4.029,81],[4.036,82],[4.044,83],[4.052,84],[4.062,85],[4.074,86],[4.085,87],[4.095,88],[4.105,89],[4.111,90],[4.116,91],[4.12,92],[4.125,93],[4.129,94],[4.135,95],[4.145,96],[4.176,97],[4.179,98],[4.193,99],[4.2,100]],"hv":[[3.0,0],[3.093,1],[3.196,2],[3.301,3],[3.401,4],[3.477,5],[3.544,6],[3.601,7],[3.637,8],[3.664,9],[3.679,10],[3.683,11],[3.689,12],[3.692,13],[3.705,14],[3.71,15],[3.713,16],[3.715,17],[3.72,18],[3.731,19],[3.735,20],[3.744,21],[3.753,22],[3.756,23],[3.758,24],[3.762,25],[3.767,26],[3.774,27],[3.78,28],[3.783,29],[3.786,30],[3.789,31],[3.794,32],[3.797,33],[3.8,34],[3.802,35],[3.805,36],[3.808,37],[3.811,38],[3.815,39],[3.828,40],[3.832,41],[3.836,42],[3.841,43],[3.846,44],[3.85,45],[3.855,46],[3.859,47],[3.864,48],[3.868,49],[3.873,50],[3.877,51],[3.881,52],[3.885,53],[3.89,54],[3.895,55],[3.9,56],[3.907,57],[3.917,58],[3.924,59],[3.929,60],[3.936,61],[3.942,62],[3.949,63],[3.957,64],[3.964,65],[3.971,66],[3.984,67],[3.99,68],[3.998,69],[4.006,70],[4.015,71],[4.024,72],[4.032,73],[4.042,74],[4.05,75],[4.06,76],[4.069,77],[4.078,78],[4.088,79],[4.098,80],[4.109,81],[4.119,82],[4.13,83],[4.141,84],[4.154,85],[4.169,86],[4.184,87],[4.197,88],[4.211,89],[4.22,90],[4.229,91],[4.237,92],[4.246,93],[4.254,94],[4.264,95],[4.278,96],[4.302,97],[4.32,98],[4.339,99],[4.35,100]],"lion":[[2.8,0],[2.84,1],[2.88,2],[2.92,3],[2.96,4],[3.0,5],[3.04,6],[3.08,7],[3.096,8],[3.112,9],[3.128,10],[3.144,11],[3.16,12],[3.176,13],[3.192,14],[3.208,15],[3.224,16],[3.24,17],[3.256,18],[3.272,19],[3.288,20],[3.304,21],[3.32,22],[3.336,23],[3.352,24],[3.368,25],[3.384,26],[3.4,27],[3.416,28],[3.432,29],[3.448,30],[3.464,31],[3.48,32],[3.496,33],[3.504,34],[3.512,35],[3.52,36],[3.528,37],[3.536,38],[3.544,39],[3.552,40],[3.56,41],[3.568,42],[3.576,43],[3.584,44],[3.592,45],[3.6,46],[3.608,47],[3.616,48],[3.624,49],[3.632,50],[3.64,51],[3.648,52],[3.656,53],[3.664,54],[3.672,55],[3.68,56],[3.688,57],[3.696,58],[3.704,59],[3.712,60],[3.72,61],[3.728,62],[3.736,63],[3.744,64],[3.752,65],[3.76,66],[3.768,67],[3.776,68],[3.784,69],[3.792,70],[3.8,71],[3.81,72],[3.82,73],[3.83,74],[3.84,75],[3.85,76],[3.86,77],[3.87,78],[3.88,79],[3.89,80],[3.9,81],[3.91,82],[3.92,83],[3.93,84],[3.94,85],[3.95,86],[3.96,87],[3.97,88],[3.98,89],[3.99,90],[4.0,91],[4.01,92],[4.03,93],[4.05,94],[4.07,95],[4.09,96],[4.1,100],[4.15,100],[4.2,100]],"fe":[[2.5,0],[2.509,1],[2.518,2],[2.527,3],[2.536,4],[2.545,5],[2.554,6],[2.563,7],[2.572,8],[2.581,9],[2.59,10],[2.599,11],[2.608,12],[2.617,13],[2.626,14],[2.635,15],[2.644,16],[2.653,17],[2.662,18],[2.671,19],[2.68,20],[2.689,21],[2.698,22],[2.707,23],[2.716,24],[2.725,25],[2.734,26],[2.743,27],[2.752,28],[2.761,29],[2.77,30],[2.779,31],[2.788,32],[2.797,33],[2.806,34],[2.815,35],[2.824,36],[2.833,37],[2.842,38],[2.851,39],[2.86,40],[2.869,41],[2.878,42],[2.887,43],[2.896,44],[2.905,45],[2.914,46],[2.923,47],[2.932,48],[2.941,49],[2.95,50],[2.959,51],[2.968,52],[2.977,53],[2.986,54],[2.995,55],[3.004,56],[3.013,57],[3.022,58],[3.031,59],[3.04,60],[3.049,61],[3.058,62],[3.067,63],[3.076,64],[3.085,65],[3.094,66],[3.103,67],[3.112,68],[3.121,69],[3.13,70],[3.139,71],[3.148,72],[3.157,73],[3.166,74],[3.175,75],[3.184,76],[3.193,77],[3.202,78],[3.211,79],[3.22,80],[3.229,81],[3.238,82],[3.247,83],[3.256,84],[3.265,85],[3.274,86],[3.283,87],[3.292,88],[3.301,89],[3.31,90],[3.319,91],[3.328,92],[3.337,93],[3.346,94],[3.355,95],[3.364,96],[3.373,97],[3.382,98],[3.391,99],[3.4,100]]},KEYS=['lipo','hv','lion','fe'],TOP=[4.30,4.45,4.30,3.50];
+const cl=(x,a,b)=>x<a?a:x>b?b:x,mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const med=a=>{const s=[...a].sort((x,y)=>x-y);return s[s.length>>1]};
+function pct(v,t){const l=TBL[KEYS[t]];if(v<=l[0][0])return 0;if(v>=l[l.length-1][0])return 100;let a=0,b=l.length-1;while(b-a>1){const n=(a+b)>>1;if(v>=l[n][0])a=n;else b=n}return v<(l[a][0]+l[b][0])/2?l[a][1]:l[b][1]}
+function cellsOf(v,t){for(let i=1;i<=12;i++)if(v<TOP[t]*i)return i;return 1}
+function raw(v,mn,mx){if(v>=mx)return 100;if(v<=mn)return 0;const s=cl(3+(v-mn)/(mx-mn)*1.2,3,4.2);return 100/(1+Math.exp(-6*(s-3.7)))}
+function rsv(p,r){r=cl(r,0,99);return r<=0?cl(p,0,100):cl((p-r)*100/(100-r),0,100)}
+function sim(ts,vs,c,mn,o){let cons=100-pct(vs[0]/c,o.t),f=vs[0],last=ts[0];
+ for(let i=1;i<ts.length;i++){const dt=Math.max(0,ts[i]-last);let g=vs[i];if(g<f)g=Math.max(g,f-dt*o.fall/1000*0.8);
+  const tc=100-rsv(raw(g/c,mn,o.mx),o.res);if(tc>cons)cons=Math.min(tc,cons+dt);f=g;last=ts[i]}
+ return cl(100-cons,0,100)}
+const tsec=s=>{const p=s.split(':');return +p[0]*3600+ +p[1]*60+ +p[2]};
+function parse(txt){const L=txt.trim().split(/\r?\n/);return{H:L[0].split(','),R:L.slice(1).map(l=>l.split(','))}}
+function analyze(name,txt,o){const{H,R}=parse(txt),it=H.indexOf('Time'),iv=H.indexOf(o.col),is=H.indexOf('sBAT(%)'),im=H.indexOf('rMIN(V)');
+ if(it<0||iv<0)return{name,err:'col'};
+ const rows=R.map(r=>({t:tsec(r[it]),v:+r[iv],s:is>=0?+r[is]:NaN,m:im>=0?+r[im]:NaN})).filter(x=>x.v>1&&!isNaN(x.t));
+ if(rows.length<30||rows[rows.length-1].t-rows[0].t<60)return{name,skip:'short'};
+ const ts=rows.map(x=>x.t),vs=rows.map(x=>x.v),end=ts[ts.length-1];
+ const c=o.cells>0?o.cells:cellsOf(med(vs.slice(0,5)),o.t);
+ const vmin=Math.min(...vs)/c,sg=rows.filter(x=>x.s>0).map(x=>x.s),drop=sg.length?sg[0]-sg[sg.length-1]:0;
+ if(med(vs.slice(0,5))/c-vmin<0.15&&drop<5)return{name,skip:'flight'};
+ const tl=rows.filter(x=>x.t>=end-30).map(x=>x.v);
+ if(tl.length<5||(Math.max(...tl)-Math.min(...tl))/c>0.06||mean(tl)/c-vmin<0.03)return{name,skip:'rest'};
+ const vr=mean(tl),conv=pct(vr/c,o.t);
+ const fin=k=>sim(ts,vs,c,k/100,o);
+ let best=[1e9,250];for(let k=250;k<=400;k++){const e=Math.abs(fin(k)-conv);if(e<best[0])best=[e,k]}
+ const sens=(fin(best[1]+5)-fin(best[1]-5))/10;
+ const ms=rows.filter(x=>x.m>0).map(x=>x.m*100),used=ms.length?Math.round(med(ms)):null;
+ const ls=rows.filter(x=>x.s>0).map(x=>x.s),logged=ls.length?ls[ls.length-1]:null;
+ return{name,model:name.replace(/\.csv$/i,'').replace(/-\d{4}-\d{2}-\d{2}.*$/,''),c,dur:end-ts[0],vc:vr/c,conv,logged,used,
+  chk:used!=null&&logged!=null?fin(used)-logged:null,rec:best[1],sens,fin};
+}
+function group(rs,minSens){const ok=rs.filter(r=>!r.err&&!r.skip&&Math.abs(r.sens)>=minSens);if(!ok.length)return null;
+ let b=[1e18,250];for(let k=250;k<=400;k++){const s=ok.reduce((a,r)=>a+(r.fin(k)-r.conv)**2,0);if(s<b[0])b=[s,k]}
+ return{k:b[1],rms:Math.sqrt(b[0]/ok.length),n:ok.length,err:ok.map(r=>r.fin(b[1])-r.conv)}}
+//ENDCORE
+
+const I={ja:{priv:'ログはこのブラウザの中だけで処理されます。外部には送信されません。',bt:'電池の種類',ce:'セル数(0=自動)',co:'電圧の列(Source)',dz:'SDカードの CSV ログを選択(複数可)、またはここにドロップ',
+ th:['ファイル','セル','時間(s)','静止電圧/セル','静止換算%','ログの最終sBAT','使用MinCv','再現差','合わせるMinCv','感度'],
+ g:'機体ごとの推奨 MinCv',gk:'推奨',gr:'誤差RMS',gn:'フライト数',low:'MinCv の影響が小さいため集計から除外',err:'読み込めません(Time または電圧の列がありません)',short:'有効なデータが少なすぎます',skp:'スキップ',sk:{short:'短すぎる(60秒未満)',flight:'飛行の形跡なし',rest:'末尾に静止区間なし'},
+ nt:'「静止換算%」は、ログ末尾30秒の平均電圧を BattAnalog の表で換算した値です(実測の mAh ではありません)。「合わせるMinCv」は、最終 sBAT がその換算値に一致する MinCv(シミュレーション)です。「再現差」はログに rMIN があるとき、シミュレーションとログの最終 sBAT の差で、±3 を超えるなら ResPct・FallMv・MaxCv の設定がログ取得時と違う可能性があります。感度は MinCv 1ステップ(0.01V)あたりの sBAT の変化(pt)です。飛行していないログ・短すぎるログ・末尾に静止区間がないログは、自動でスキップされます。電圧センサーが較正されていないと、結果もずれます。推定値であり、着陸判断の唯一の基準にしないでください。'},
+ en:{priv:'Logs are processed only inside this browser. Nothing is uploaded.',bt:'Battery type',ce:'Cells (0 = auto)',co:'Voltage column (Source)',dz:'Choose the CSV logs from the SD card (several allowed) or drop them here',
+ th:['File','Cells','Time (s)','Rest V/cell','Rest conv %','Logged final sBAT','MinCv used','Model diff','MinCv to match','Sens.'],
+ g:'Recommended MinCv per aircraft',gk:'Recommended',gr:'RMS error',gn:'Flights',low:'excluded: MinCv has little effect',err:'Cannot read (no Time or voltage column)',short:'Too little valid data',skp:'skipped',sk:{short:'too short (< 60 s)',flight:'no flight',rest:'no rest at the end'},
+ nt:'"Rest conv %" converts the mean voltage of the last 30 s of the log with the BattAnalog table (it is not a measured mAh figure). "MinCv to match" is the MinCv for which the simulated final sBAT equals that value. "Model diff" (only if the log has rMIN) is simulation minus logged final sBAT; beyond ±3 your ResPct, FallMv or MaxCv probably differ from those used for the log. Sens. is the sBAT change per MinCv step (0.01 V) in points. Logs without a flight, logs that are too short and logs without a resting stretch at the end are skipped automatically. If the voltage sensor is not calibrated, the results are off too. These are estimates; never use them as your only landing criterion.'}};
+let L='ja',files=[];const $=i=>document.getElementById(i),f1=(x,d=1)=>x==null||isNaN(x)?'–':x.toFixed(d);
+function tx(){document.querySelectorAll('[data-i]').forEach(e=>e.textContent=I[L][e.dataset.i]);$('priv').textContent=I[L].priv;$('nt').textContent=I[L].nt;$('lg').textContent=L=='ja'?'EN':'JA';run()}
+function opts(){return{t:+$('bt').value,cells:+$('ce').value,res:+$('rs').value,fall:+$('fa').value,mx:+$('mx').value/100,col:$('co').value}}
+function run(){const o=opts(),T=I[L],rs=files.map(f=>analyze(f.name,f.txt,o));let h='<div class=w><table><tr>'+T.th.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
+ rs.forEach(r=>{h+=r.skip?`<tr class=m><td>${r.name}</td><td colspan=9>${T.skp}: ${T.sk[r.skip]}</td></tr>`:r.err?`<tr><td>${r.name}</td><td colspan=9 class=bad>${T[r.err=='col'?'err':'short']}</td></tr>`:
+  `<tr><td>${r.name}</td><td>${r.c}</td><td>${r.dur.toFixed(0)}</td><td>${r.vc.toFixed(3)}</td><td>${r.conv}</td><td>${f1(r.logged,0)}</td><td>${r.used??'–'}</td><td class="${r.chk!=null&&Math.abs(r.chk)>3?'bad':''}">${f1(r.chk)}</td><td class=rec>${r.rec}</td><td>${f1(r.sens,2)}</td></tr>`});
+ h+='</table></div>';const ms={};rs.filter(r=>!r.err&&!r.skip).forEach(r=>(ms[r.model]=ms[r.model]||[]).push(r));
+ h+=`<div class=box><b>${T.g}</b>`;for(const m in ms){const g=group(ms[m],0.15),lo=ms[m].filter(r=>Math.abs(r.sens)<0.15).length;
+  h+=`<p>${m}: `+(g?`${T.gk} <span class=rec>${g.k}</span> (${T.gr} ${g.rms.toFixed(1)}, ${T.gn} ${g.n})`:'–')+(lo?` <span class=m>[${lo}: ${T.low}]</span>`:'')+'</p>'}
+ $('out').innerHTML=h+'</div>'}
+function cols(){const H=parse(files[0].txt).H.filter(h=>/\(V\)$/.test(h)),p=['RxBt(V)','Vbat(V)','VFAS(V)'].find(x=>H.includes(x))||H[0];$('co').innerHTML=H.map(h=>`<option ${h==p?'selected':''}>${h}</option>`).join('')}
+async function load(fl){files=[];for(const f of fl)files.push({name:f.name,txt:await f.text()});if(files.length){cols();run()}}
+$('fi').onchange=e=>load(e.target.files);const dz=$('dz');dz.ondragover=e=>e.preventDefault();dz.ondrop=e=>{e.preventDefault();load(e.dataTransfer.files)};
+['bt','ce','rs','fa','mx','co'].forEach(i=>$(i).onchange=()=>files.length&&run());$('lg').onclick=()=>{L=L=='ja'?'en':'ja';tx()};tx();
+</script></body></html>

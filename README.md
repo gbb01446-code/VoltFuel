@@ -12,12 +12,14 @@ VoltFuel estimates the remaining capacity of a LiPo pack from the pack-voltage t
 | Part | File | Purpose |
 |---|---|---|
 | Widget | `VoltFuel_SD/WIDGETS/voltfuel/main.lua` | The gauge widget (EdgeTX 3.x+, color-LCD touch radios) |
-| Log viewer (radio) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Log.lua` | Graph a flight log on the radio (default: rCEL, sBAT, rBAT) |
+| VoltFuel Tools (radio) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua` (+ `SCRIPTS/VoltFuel/`) | Menu on the radio: **Graph** (a log, default rCEL / sBAT / rBAT), **Tune** (suggests a MinCv from your logs), **Logs** (size and length of each log, delete) |
 | Log viewer (PC) | `VoltFuel_Compare.html` | Compare several flights in a web browser. UI language: Japanese |
+| MinCv tuning (PC) | `VoltFuel_Tune.html` | Suggests a MinCv from your logs, per flight and per aircraft. UI language: Japanese / English |
+| Documents | `docs/` | Tester guide and support notes (Japanese / English) |
 
 ## Quick install
 
-1. Copy the contents of `VoltFuel_SD/` to the root of the radio's SD card, so that you get `/WIDGETS/voltfuel/main.lua` and `/SCRIPTS/TOOLS/VoltFuel_Log.lua`.
+1. Copy the contents of `VoltFuel_SD/` to the root of the radio's SD card, so that you get `/WIDGETS/voltfuel/main.lua`, `/SCRIPTS/TOOLS/VoltFuel_Tools.lua` and `/SCRIPTS/VoltFuel/`.
 2. On the radio: long-press a Main View → add a widget → **VoltFuel**, then pick your pack-voltage **Source** in its settings.
 3. For flight analysis, turn on the widget's **ExtraTelem** option and enable SD logging for `sBAT`, `rBAT`, `rCEL` and `rMIN`.
 
@@ -25,8 +27,16 @@ VoltFuel estimates the remaining capacity of a LiPo pack from the pack-voltage t
 
 ## Analysing logs
 
-- **On the radio:** SYS → Tools → **VoltFuel_Log**. Pick a log file; if it contains `rCEL`, `sBAT` and `rBAT` the graph opens directly.
+- **On the radio:** SYS → Tools → **VoltFuel_Tools** → **Graph**. Pick a log file; if it contains `rCEL`, `sBAT` and `rBAT` the graph opens directly.
 - **On a PC:** copy the log CSV files from the SD card's `/LOGS`, open `VoltFuel_Compare.html` in a browser (no installation, no upload — the files are processed locally) and select the CSV files or a folder.
+
+## Tuning MinCv and further reading
+
+- **Tune on the radio:** SYS → Tools → **VoltFuel_Tools** → **Tune**. Choose the aircraft; the newest usable logs are analysed (logs without a flight, too short, or without a resting stretch at the end are skipped and listed with the reason) and a MinCv is suggested. In *Settings* enter the same battery type, cells, ResPct, FallMv and MaxCv as in the widget. The radio screens are in English.
+- **Logs on the radio:** **VoltFuel_Tools → Logs** lists the logs of an aircraft with size and length; mark and delete logs, or delete in bulk (all logs of the aircraft, shorter than N s, older than N days, all but the newest N). Deleting cannot be undone; stop logging first.
+- **Tune on a PC:** open `VoltFuel_Tune.html` in a browser (same calculation), load about three flights' CSV logs, and read the suggested MinCv per aircraft (no installation, no upload).
+- **Tester guide:** [docs/TESTER_GUIDE.en.md](docs/TESTER_GUIDE.en.md) — setup, voltage-source calibration, logging, test flights, what to report.
+- **Support notes:** [docs/SUPPORT_NOTES.en.md](docs/SUPPORT_NOTES.en.md) — how sBAT is computed and how to tune it. Paste it into an AI chat when you ask for help.
 
 ## Limitations
 

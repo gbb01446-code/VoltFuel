@@ -12,12 +12,14 @@ VoltFuel は、LiPo の**パック電圧テレメトリだけ**(電流センサ�
 | 区分 | ファイル | 用途 |
 |---|---|---|
 | ウィジェット | `VoltFuel_SD/WIDGETS/voltfuel/main.lua` | ゲージ本体(EdgeTX 3.x 以上、カラー液晶タッチ機) |
-| ログ表示(送信機) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Log.lua` | 送信機上でフライトログをグラフ表示(既定: rCEL、sBAT、rBAT) |
+| VoltFuel Tools(送信機) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua`(+ `SCRIPTS/VoltFuel/`) | 送信機上のメニュー。**Graph**(ログのグラフ。既定は rCEL・sBAT・rBAT)、**Tune**(ログから MinCv の目安を出す)、**Logs**(ログのサイズと長さの一覧、削除) |
 | ログ表示(PC) | `VoltFuel_Compare.html` | ブラウザで複数フライトを比較(表示は日本語) |
+| MinCv の調整(PC) | `VoltFuel_Tune.html` | ログから、フライトごと・機体ごとの MinCv の目安を出します(日本語・英語) |
+| ドキュメント | `docs/` | テスターガイドとサポートノート(日本語・英語) |
 
 ## かんたんインストール
 
-1. `VoltFuel_SD/` の中身を、送信機の SD カードの直下にコピーします。`/WIDGETS/voltfuel/main.lua` と `/SCRIPTS/TOOLS/VoltFuel_Log.lua` になります。
+1. `VoltFuel_SD/` の中身を、送信機の SD カードの直下にコピーします。`/WIDGETS/voltfuel/main.lua`、`/SCRIPTS/TOOLS/VoltFuel_Tools.lua`、`/SCRIPTS/VoltFuel/` になります。
 2. 送信機で、メインビューを長押し → ウィジェットを追加 → **VoltFuel**。設定で、パック電圧の **Source** を選びます。
 3. 分析したいときは、ウィジェットの **ExtraTelem** をオンにし、`sBAT`、`rBAT`、`rCEL`、`rMIN` を SD ログに記録します。
 
@@ -25,8 +27,16 @@ VoltFuel は、LiPo の**パック電圧テレメトリだけ**(電流センサ�
 
 ## ログの分析
 
-- **送信機で:** SYS → Tools → **VoltFuel_Log**。ログファイルを選びます。`rCEL`、`sBAT`、`rBAT` が入っていれば、そのままグラフが開きます。
+- **送信機で:** SYS → Tools → **VoltFuel_Tools** → **Graph**。ログファイルを選びます。`rCEL`、`sBAT`、`rBAT` が入っていれば、そのままグラフが開きます。
 - **PC で:** SD カードの `/LOGS` からログの CSV をコピーし、`VoltFuel_Compare.html` をブラウザで開いて、CSV かフォルダを選びます(インストール不要。ファイルは PC の中だけで処理され、アップロードされません)。
+
+## MinCv の調整と、関連ドキュメント
+
+- **送信機で調整:** SYS → Tools → **VoltFuel_Tools** → **Tune**。機体を選ぶと、新しいログから順に解析し(飛行していないログ、短すぎるログ、末尾に静止区間がないログは、理由つきでスキップ)、MinCv の目安を出します。*Settings* には、ウィジェットと同じ電池種、セル数、ResPct、FallMv、MaxCv を入れてください。送信機の画面は英語です。
+- **送信機でログ管理:** **VoltFuel_Tools → Logs** で、機体ごとにログのサイズと長さを一覧にします。ログを選んで削除したり、一括削除(機体のログ全部、N 秒より短い、N 日より古い、最新 N 本以外)ができます。削除は取り消せないので、先にログの記録を止めてください。
+- **PC で調整:** `VoltFuel_Tune.html` をブラウザで開き(計算は同じ)、3 フライトほどの CSV ログを読み込むと、機体ごとの MinCv の目安が出ます(インストール不要、アップロードなし)。
+- **テスターガイド:** [docs/TESTER_GUIDE.ja.md](docs/TESTER_GUIDE.ja.md) — セットアップ、電圧ソースの較正、ログ、テストフライト、ご報告いただく内容。
+- **サポートノート:** [docs/SUPPORT_NOTES.ja.md](docs/SUPPORT_NOTES.ja.md) — sBAT の計算と調整の考え方。相談するときは、AI チャットに貼ってください。
 
 ## 制限事項
 
