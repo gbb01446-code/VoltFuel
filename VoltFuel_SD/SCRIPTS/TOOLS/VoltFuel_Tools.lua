@@ -1,5 +1,5 @@
 --[[
-  VoltFuel Tools -- Graph / Tune / Logs for the VoltFuel widget
+  VoltFuel Tools 0.9.4 -- Graph / Tune / Logs for the VoltFuel widget
 
   Copyright (C) 2026 Masayuki
   License: GNU General Public License, version 2 (see LICENSE).
@@ -23,6 +23,7 @@
 
 -- The modules live next to this file. The old location (/SCRIPTS/VoltFuel/)
 -- is still accepted so that an earlier installation keeps working.
+local VERSION = "0.9.4"
 local DIRS = { "/SCRIPTS/TOOLS/VoltFuel/", "/SCRIPTS/VoltFuel/" }
 local DIR
 local L, mod
@@ -69,7 +70,7 @@ local function run(event, ts)
     if mod then mod.init(L) end
   end
   if not mod then
-    L.drawList("VoltFuel Tools", items, lst)
+    L.drawList("VoltFuel Tools v" .. VERSION, items, lst)
     L.txt(10, LCD_H - 22, "Estimates only. Do not rely on them alone for landing.", SMLSIZE, L.C.dim)
   end
   return 0

@@ -1,6 +1,6 @@
-# VoltFuel Tester Guide (0.9.4)
+# VoltFuel User Guide (0.9.4)
 
-Thank you for testing VoltFuel. This guide covers setup, logging, MinCv tuning and reporting. 日本語: [TESTER_GUIDE.ja.md](TESTER_GUIDE.ja.md)
+This guide covers setup, logging, MinCv tuning and what to include when you ask for help. 日本語: [USER_GUIDE.ja.md](USER_GUIDE.ja.md)
 
 ## In the repository
 | File | Purpose |
@@ -12,7 +12,7 @@ Thank you for testing VoltFuel. This guide covers setup, logging, MinCv tuning a
 
 ## Please note
 - VoltFuel is an **estimate from voltage only**. Its accuracy against the real remaining capacity has not been measured. **Never use it as your only landing criterion.**
-- For EdgeTX 3.x or newer color-LCD touch radios (not black-and-white radios). It uses 10 widget options.
+- Requirements: **EdgeTX 2.12 or newer** on a color-LCD touch radio (not a black-and-white radio), and **pack-voltage telemetry** (for example RxBt, Vbat or VFAS). No current sensor is needed. VoltFuel uses 10 widget options.
 
 ## 1. Setup
 1. Copy the contents of `VoltFuel_SD/` to the root of the SD card (you get `/WIDGETS/voltfuel/` and `/SCRIPTS/TOOLS/`).
@@ -36,7 +36,14 @@ In the model's SD logging, record:
 - `sBAT`, `rBAT`, `rCEL`, `rMIN`
 - if you have them, current and throttle (useful for analysis)
 
-## 4. Test flights
+**The logging switch.** Nothing is logged until a Special Function *SD Logs* is active, so you need one.
+- If that Special Function is always ON, a log file is created every time the radio is switched on, flight or not, and the SD card fills with useless logs.
+- At the least, switch it with a logical switch that is ON only while the aircraft is powered: function `a>x`, V1 = your voltage Source (for example RxBt), V2 = 2 V (any value above 0 and well below an empty pack).
+- Then logs exist only while the aircraft is powered, and they last until you power it off. That also records the resting voltage after landing, so keep the aircraft powered for 30–60 s after landing.
+- Logs from powering the aircraft without flying are still created. The Tune screen skips them, and **VoltFuel_Tools → Logs** deletes them in bulk (for example "shorter than N s").
+- Set the logging interval of *SD Logs* to 1.0 s.
+
+## 4. Flights for tuning
 1. With a fully charged pack, power on the radio and then the aircraft. A value appears after about 9 seconds (about 2 seconds with a fixed Cells value).
 2. Fly as usual.
 3. **After landing, leave the aircraft powered for 30–60 seconds.** (This records the resting voltage.)
@@ -54,8 +61,8 @@ In the model's SD logging, record:
 
 For reference, on the author's 6S LiPo aircraft MinCv came out at 283–298 (default 290); on a small 2S LiPo-HV helicopter at 258–277. These are examples only and depend on the aircraft and the voltage calibration.
 
-## 6. What to report
-Please note and send:
+## 6. When you ask for help or report a problem
+Please include:
 - Aircraft (type, size) and battery (cells, chemistry, capacity, C rating, age or number of cycles)
 - The voltage Source and its calibration (Offset or Ratio)
 - Settings (BattType, Cells, ResPct, FallMv, MinCv, MaxCv)

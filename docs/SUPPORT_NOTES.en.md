@@ -58,7 +58,8 @@ The per-aircraft "Recommended" MinCv minimizes the error over that aircraft's fl
 - If the Source is a per-cell voltage sensor, set Cells to 1. FallMv limits the Source voltage, so it acts differently than on a pack voltage.
 - Auto cell detection can mistake a deeply discharged 6S for 5S, and a LiPo-HV 6S for 7S when BattType is LiPo.
 - Verified only on a few 6S LiPo aircraft and a small 2S LiPo-HV helicopter. Aged packs, cold packs and other chemistries are untested.
-- While the widget's settings screen is open, the widget does not run and the sensors stop. Do not open it in flight.
+- In one logged session on the ground, the sensor values (sBAT and the others) were recorded as 0 for about ten seconds. The cause is unknown. To be safe, do not open the widget's settings screen in flight.
+- Logging needs a Special Function *SD Logs*. If it is always ON, a log is created every time the radio is switched on. At the least, switch it with a logical switch `a>x` (V1 = the voltage Source, V2 = 2 V) so that logs exist only while the aircraft is powered. Keep it powered for 30–60 s after landing to record the resting voltage. Logging interval: 1.0 s.
 
 ## 7. Asking an AI for help
 Paste these together with this note:

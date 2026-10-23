@@ -14,7 +14,7 @@ VoltFuel estimates the remaining capacity of a LiPo pack from the pack-voltage t
 
 ## Requirements
 
-- EdgeTX **3.x or newer**, color-LCD touch radios (developed on TX16S, TX15, GX15). Not for black-and-white radios. VoltFuel uses 10 widget options.
+- EdgeTX **2.12 or newer**, color-LCD touch radios (developed on TX16S, TX15, GX15). Not for black-and-white radios. VoltFuel uses 10 widget options.
 - A telemetry sensor that reports the **pack** voltage (VFAS, RxBt, Vbat, …). A receiver that only reports its own BEC voltage will not work.
 
 ## Install

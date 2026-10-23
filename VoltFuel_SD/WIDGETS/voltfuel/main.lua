@@ -1,6 +1,6 @@
 --[[
   VoltFuel 0.9.4 -- voltage-only battery gauge widget for EdgeTX
-  (color-LCD touch radios: TX16S, TX15, GX15, ...; EdgeTX 3.x or newer)
+  (color-LCD touch radios: TX16S, TX15, GX15, ...; EdgeTX 2.12 or newer)
 
   Copyright (C) 2026 Masayuki
   License: GNU General Public License, version 2 (see LICENSE).
