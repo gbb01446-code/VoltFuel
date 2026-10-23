@@ -12,14 +12,14 @@ VoltFuel は、LiPo の**パック電圧テレメトリだけ**(電流センサ�
 | 区分 | ファイル | 用途 |
 |---|---|---|
 | ウィジェット | `VoltFuel_SD/WIDGETS/voltfuel/main.lua` | ゲージ本体(EdgeTX 3.x 以上、カラー液晶タッチ機) |
-| VoltFuel Tools(送信機) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua`(+ `SCRIPTS/VoltFuel/`) | 送信機上のメニュー。**Graph**(ログのグラフ。既定は rCEL・sBAT・rBAT)、**Tune**(ログから MinCv の目安を出す)、**Logs**(ログのサイズと長さの一覧、削除) |
+| VoltFuel Tools(送信機) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua`(+ `SCRIPTS/TOOLS/VoltFuel/`) | 送信機上のメニュー。**Graph**(ログのグラフ。既定は rCEL・sBAT・rBAT)、**Tune**(ログから MinCv の目安を出す)、**Logs**(ログのサイズと長さの一覧、削除) |
 | ログ表示(PC) | `VoltFuel_Compare.html` | ブラウザで複数フライトを比較(表示は日本語) |
 | MinCv の調整(PC) | `VoltFuel_Tune.html` | ログから、フライトごと・機体ごとの MinCv の目安を出します(日本語・英語) |
 | ドキュメント | `docs/` | テスターガイドとサポートノート(日本語・英語) |
 
 ## かんたんインストール
 
-1. `VoltFuel_SD/` の中身を、送信機の SD カードの直下にコピーします。`/WIDGETS/voltfuel/main.lua`、`/SCRIPTS/TOOLS/VoltFuel_Tools.lua`、`/SCRIPTS/VoltFuel/` になります。
+1. `VoltFuel_SD/` の中身を、送信機の SD カードの直下にコピーします。`/WIDGETS/voltfuel/main.lua`、`/SCRIPTS/TOOLS/VoltFuel_Tools.lua`、`/SCRIPTS/TOOLS/VoltFuel/` になります。
 2. 送信機で、メインビューを長押し → ウィジェットを追加 → **VoltFuel**。設定で、パック電圧の **Source** を選びます。
 3. 分析したいときは、ウィジェットの **ExtraTelem** をオンにし、`sBAT`、`rBAT`、`rCEL`、`rMIN` を SD ログに記録します。
 

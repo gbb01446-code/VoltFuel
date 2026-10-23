@@ -13,34 +13,46 @@
   the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
   PURPOSE. See the GNU General Public License for more details.
 
-  Install: copy the SD-card folders (SCRIPTS/TOOLS and SCRIPTS/VoltFuel).
+  Install: copy the SD-card folder SCRIPTS/TOOLS (VoltFuel_Tools.lua and the
+  folder VoltFuel/ next to it).
   Run: SYS (or the Tools menu) -> VoltFuel_Tools.
     Graph -- graph of a log (sBAT, voltage, ...)
     Tune  -- suggests a MinCv from your logs
     Logs  -- list, check and delete log files
 --]]
 
-local DIR = "/SCRIPTS/VoltFuel/"
+-- The modules live next to this file. The old location (/SCRIPTS/VoltFuel/)
+-- is still accepted so that an earlier installation keeps working.
+local DIRS = { "/SCRIPTS/TOOLS/VoltFuel/", "/SCRIPTS/VoltFuel/" }
+local DIR
 local L, mod
 local items = { "Graph   (draw a log)", "Tune    (suggest a MinCv)", "Logs    (manage log files)" }
 local names = { "graph", "tune", "logs" }
 local lst
 
 local function load(name)
-  local chunk = loadScript(DIR .. name .. ".lua")
-  if not chunk then return nil end
-  return chunk()
+  for _, d in ipairs(DIR and { DIR } or DIRS) do
+    local chunk = loadScript(d .. name .. ".lua")
+    if chunk then
+      DIR = d
+      return chunk()
+    end
+  end
+  return nil
 end
 
 local function init()
   L = load("lib")
-  if L then L.init() end
+  if L then
+    L.DIR = DIR
+    L.init()
+  end
   lst = L and L.newList() or nil
 end
 
 local function run(event, ts)
   if not L then
-    lcd.drawText(6, 6, "VoltFuel: /SCRIPTS/VoltFuel/ is missing", 0)
+    lcd.drawText(6, 6, "VoltFuel: /SCRIPTS/TOOLS/VoltFuel/ is missing", 0)
     return event == EVT_VIRTUAL_EXIT and 1 or 0
   end
   if mod then

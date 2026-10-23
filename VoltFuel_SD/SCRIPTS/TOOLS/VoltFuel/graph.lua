@@ -1,5 +1,5 @@
 --[[
-  VoltFuel_Log -- log viewer tool for the VoltFuel widget (EdgeTX)
+  VoltFuel Tools -- Graph: log viewer for the VoltFuel widget (EdgeTX)
 
   Copyright (C) 2026 Masayuki
   License: GNU General Public License, version 2 (see LICENSE).
@@ -15,10 +15,10 @@
 --]]
 
 ---------------------------------------------------------------------------
--- VoltFuel_Log.lua  -  EdgeTX log viewer for VoltFuel (color LCD radios)
+-- graph.lua  -  EdgeTX log viewer for VoltFuel (color LCD radios)
 --
--- Install : SD:/SCRIPTS/TOOLS/VoltFuel_Log.lua
--- Run     : SYS (or long-press SYS) > Tools > VoltFuel_Log
+-- Install : SD:/SCRIPTS/TOOLS/VoltFuel/graph.lua (started from VoltFuel_Tools)
+-- Run     : SYS (or long-press SYS) > Tools > VoltFuel_Tools > Graph
 --
 -- Default graph : left axis  = rCEL (cell voltage)
 --                 right axis = sBAT and rBAT (shared scale, two lines)
@@ -31,7 +31,7 @@
 --           EXIT = back to file list
 ---------------------------------------------------------------------------
 
-local TITLE    = "VoltFuel_Log"
+local TITLE    = "Graph"
 local LOGDIR   = "/LOGS"
 local HEAD_H   = 22          -- title bar height
 local ROW_H    = 22          -- list row height

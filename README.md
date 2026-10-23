@@ -12,14 +12,14 @@ VoltFuel estimates the remaining capacity of a LiPo pack from the pack-voltage t
 | Part | File | Purpose |
 |---|---|---|
 | Widget | `VoltFuel_SD/WIDGETS/voltfuel/main.lua` | The gauge widget (EdgeTX 3.x+, color-LCD touch radios) |
-| VoltFuel Tools (radio) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua` (+ `SCRIPTS/VoltFuel/`) | Menu on the radio: **Graph** (a log, default rCEL / sBAT / rBAT), **Tune** (suggests a MinCv from your logs), **Logs** (size and length of each log, delete) |
+| VoltFuel Tools (radio) | `VoltFuel_SD/SCRIPTS/TOOLS/VoltFuel_Tools.lua` (+ `SCRIPTS/TOOLS/VoltFuel/`) | Menu on the radio: **Graph** (a log, default rCEL / sBAT / rBAT), **Tune** (suggests a MinCv from your logs), **Logs** (size and length of each log, delete) |
 | Log viewer (PC) | `VoltFuel_Compare.html` | Compare several flights in a web browser. UI language: Japanese |
 | MinCv tuning (PC) | `VoltFuel_Tune.html` | Suggests a MinCv from your logs, per flight and per aircraft. UI language: Japanese / English |
 | Documents | `docs/` | Tester guide and support notes (Japanese / English) |
 
 ## Quick install
 
-1. Copy the contents of `VoltFuel_SD/` to the root of the radio's SD card, so that you get `/WIDGETS/voltfuel/main.lua`, `/SCRIPTS/TOOLS/VoltFuel_Tools.lua` and `/SCRIPTS/VoltFuel/`.
+1. Copy the contents of `VoltFuel_SD/` to the root of the radio's SD card, so that you get `/WIDGETS/voltfuel/main.lua`, `/SCRIPTS/TOOLS/VoltFuel_Tools.lua` and `/SCRIPTS/TOOLS/VoltFuel/`.
 2. On the radio: long-press a Main View → add a widget → **VoltFuel**, then pick your pack-voltage **Source** in its settings.
 3. For flight analysis, turn on the widget's **ExtraTelem** option and enable SD logging for `sBAT`, `rBAT`, `rCEL` and `rMIN`.
 

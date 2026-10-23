@@ -23,7 +23,7 @@
 --]]
 
 local L
-local CFG = "/SCRIPTS/VoltFuel/tune.cfg"
+local CFG                  -- settings file, next to the modules
 
 -- usable-flight rules
 local MIN_DUR = 60        -- s of valid voltage
@@ -532,6 +532,7 @@ end
 ---------------------------------------------------------------------------
 local function init(lib)
   L = lib
+  CFG = (L.DIR or "/SCRIPTS/TOOLS/VoltFuel/") .. "tune.cfg"
   loadCfg()
   setSel, setEdit = 1, false
   goModels()
