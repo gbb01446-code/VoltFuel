@@ -38,7 +38,7 @@ VoltFuel estimates the remaining capacity of a LiPo pack from the pack-voltage t
 
 ## Tuning MinCv and further reading
 
-- **Tune on the radio:** SYS → Tools → **VoltFuel_Tools** → **Tune**. Choose the aircraft; the newest usable logs are analysed (logs without a flight, too short, or without a resting stretch at the end are skipped and listed with the reason) and a MinCv is suggested. In *Settings* enter the same battery type, cells, ResPct, FallMv and MaxCv as in the widget. The radio screens are in English.
+- **Tune on the radio:** SYS → Tools → **VoltFuel_Tools** → **Tune**. Choose the aircraft; its newest usable logs (8 by default, set in *Settings*) are analysed (logs without a flight, too short, or without a resting stretch at the end are skipped and listed with the reason) and a MinCv is suggested. Logs that were flown with a MinCv close to the suggestion (±5) are marked `*`, with a summary of how they came out. In *Settings* enter the same battery type, cells, ResPct, FallMv and MaxCv as in the widget. The radio screens are in English.
 - **Logs on the radio:** **VoltFuel_Tools → Logs** lists the logs of an aircraft with size and length; mark and delete logs, or delete in bulk (all logs of the aircraft, shorter than N s, older than N days, all but the newest N). Deleting cannot be undone; stop logging first.
 - **Tune on a PC:** open `VoltFuel_Tune.html` in a browser (same calculation), load about three flights' CSV logs, and read the suggested MinCv per aircraft (no installation, no upload).
 - **User guide:** [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) — setup, voltage-source calibration, logging, MinCv tuning, what to include when you ask for help.

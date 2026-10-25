@@ -1,4 +1,4 @@
-# VoltFuel User Guide (0.9.4)
+# VoltFuel User Guide (0.9.5)
 
 This guide covers setup, logging, MinCv tuning and what to include when you ask for help. 日本語: [USER_GUIDE.ja.md](USER_GUIDE.ja.md)
 
@@ -59,7 +59,7 @@ In the model's SD logging, record:
 4. Move it in steps of **5–10**. One step changes sBAT by only 0.3–1 point, which is buried in the flight-to-flight scatter (±3–5 points).
 5. Change only one option at a time and judge over about three flights.
 
-For reference, on the author's 6S LiPo aircraft MinCv came out at 283–298 (default 290); on a small 2S LiPo-HV helicopter at 258–277. These are examples only and depend on the aircraft and the voltage calibration.
+For reference, on the author's 4S and 6S aircraft MinCv came out at about 270–298 (default 286, a little high on purpose so that the first readings are cautious); on a small 2S LiPo-HV helicopter at about 258–283 (around 268). These are examples only and depend on the aircraft and the voltage calibration.
 
 ## 6. When you ask for help or report a problem
 Please include:

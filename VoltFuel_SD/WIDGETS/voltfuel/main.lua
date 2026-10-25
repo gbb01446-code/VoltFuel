@@ -1,5 +1,5 @@
 --[[
-  VoltFuel 0.9.4 -- voltage-only battery gauge widget for EdgeTX
+  VoltFuel 0.9.5 -- voltage-only battery gauge widget for EdgeTX
   (color-LCD touch radios: TX16S, TX15, GX15, ...; EdgeTX 2.12 or newer)
 
   Copyright (C) 2026 Masayuki
@@ -65,7 +65,7 @@
                 sooner. If you change it, re-tune MinCv.
     FallMv   -- sag-filter limit in mV per second (default 50): how fast
                 the filtered voltage may fall. Lower = smoother.
-    MinCv    -- "empty" cell voltage x100 -> curve 0% (default 290). The
+    MinCv    -- "empty" cell voltage x100 -> curve 0% (default 286). The
                 main tuning knob; see CALIBRATION. Higher MinCv = lower
                 reading.
     MaxCv    -- "full" cell voltage x100 (410 = 4.10 V) -> curve 100%.
@@ -125,13 +125,14 @@
 
   CALIBRATION NOTES
   ------------------------------------------------------------------------
-  The default MinCv (290) comes from the author's 9 logged flights: 8 on
-  6S packs (about 4.2 V/cell when full) and 1 on a 2S LiPo-HV pack; one airplane
-  and three helicopters; voltage from Vbat or RxBt. The reference was the
-  resting-voltage conversion of the final settled voltage, NOT a measured
-  charge in mAh. The MinCv that made the final VoltFuel value match that
-  reference was 283-298 on 6S (one short, low-sag flight was left out
-  because its result barely depends on MinCv) and 277 on the 2S LiPo-HV heli.
+  The default MinCv (286) is based on the author's logs of 4S and 6S
+  aircraft (one airplane, three helicopters; voltage from RxBt or Vbat):
+  the MinCv that made the final VoltFuel value match the resting-voltage
+  conversion of the final settled voltage (NOT a measured charge in mAh)
+  was between about 270 and 298, centred near 283. The default is set a
+  little higher on purpose, so that the first readings err on the cautious
+  (low) side. A small, high-load pack (for example a 2S 400 mAh helicopter)
+  needed a much lower value (about 268) and reads low with the default.
   Expect to fine-tune it per aircraft over a few flights -- see the
   README.
 
@@ -337,7 +338,7 @@ local options = {
   { "Cells", VALUE, 0, 0, 20 },
   { "ResPct", VALUE, 35, 0, 60 },
   { "FallMv", VALUE, 50, 0, 1000 },
-  { "MinCv", VALUE, 290, 250, 400 },
+  { "MinCv", VALUE, 286, 250, 400 },
   { "MaxCv", VALUE, 410, 250, 430 },
   { "TxtColor", COLOR, WHITE },
   { "ResetSw", SOURCE, 0 },
@@ -399,7 +400,7 @@ local function performReset(wgt, voltage)
   -- (the switch flip IS the person's attestation that this reading is
   -- trustworthy right now, so there is nothing left to "prove").
   local maxCellVoltage = (wgt.options.MaxCv or 410) / 100
-  local minCellVoltage = (wgt.options.MinCv or 290) / 100
+  local minCellVoltage = (wgt.options.MinCv or 286) / 100
   wgt.lastFuelPercent = clamp(genericPct, 0, 100)
   wgt.lastVcell = vCell
   wgt.lastRawPct = rawPercentFromCellVoltage(vCell, minCellVoltage, maxCellVoltage)
@@ -461,7 +462,7 @@ local function step(wgt)
   wgt.lastVoltage = voltage
 
   local maxCellVoltage = (wgt.options.MaxCv or 410) / 100
-  local minCellVoltage = (wgt.options.MinCv or 290) / 100
+  local minCellVoltage = (wgt.options.MinCv or 286) / 100
   local reservePct = wgt.options.ResPct or 35
 
   local now = nowSeconds()
@@ -583,7 +584,7 @@ local function step(wgt)
       math.floor(voltage / wgt.cellCount * 100 + 0.5), UNIT_VOLTS, 2, CEL_SENSOR_NAME)
     -- MinCv in use (option value x100 = value in V with 2 decimals).
     setTelemetryValue(MIN_SENSOR_ID, SENSOR_SUBID, SENSOR_INSTANCE,
-      math.floor(wgt.options.MinCv or 290), UNIT_VOLTS, 2, MIN_SENSOR_NAME)
+      math.floor(wgt.options.MinCv or 286), UNIT_VOLTS, 2, MIN_SENSOR_NAME)
   end
 end
 

@@ -47,7 +47,7 @@ A reference meter has tolerances too, so use one you trust.
 | Cells | 0 | Cell count. `0` = auto-detect (BattAnalog rule, re-checked for the first 8 s, then locked). |
 | ResPct | 35 | Reserve: the point on the curve that is shown as 0 %. Higher = reads lower and reaches 0 % sooner. If you change it, re-tune MinCv. |
 | FallMv | 50 | Sag filter: how fast the filtered voltage may fall, in mV per second. Lower = smoother. |
-| MinCv | 290 | "Empty" cell voltage ×100 → curve 0 %. **The main tuning knob.** Higher MinCv = lower reading. |
+| MinCv | 286 | "Empty" cell voltage ×100 → curve 0 %. **The main tuning knob.** Higher MinCv = lower reading. |
 | MaxCv | 410 | "Full" cell voltage ×100 → curve 100 %. Not tuned for other chemistries (LiPo-HV: only one 2S flight checked). |
 | TxtColor | white | Text color. |
 | ResetSw | – | Optional switch. On the rising edge, jumps the value to the BattAnalog-style value at that instant. |
@@ -89,7 +89,7 @@ After a value has appeared and telemetry is lost, the last value is held and the
 
 Calibrate the voltage source first (see above).
 
-The default (290) comes from the author's 9 logged flights: 8 on 6S packs (about 4.2 V/cell when full) and 1 on a 2S LiPo-HV pack; one airplane and three helicopters; voltage from Vbat or RxBt. The reference was the resting-voltage conversion of the final settled voltage — **not** a measured charge in mAh. The MinCv that made the final VoltFuel value match that reference was **283–298 on 6S** (one short, low-sag flight was left out because its result barely depends on MinCv) and 277 on the 2S LiPo-HV helicopter. Expect to fine-tune it per aircraft over a few flights:
+The default (286) is based on the author's logs of 4S and 6S aircraft (one airplane, three helicopters; voltage from RxBt or Vbat). The MinCv that made the final VoltFuel value match the resting-voltage conversion of the final settled voltage — **not** a measured charge in mAh — was between about **270 and 298**, centred near 283. The default is set a little higher on purpose, so that the first readings err on the cautious (low) side. A small, high-load pack (for example a 2S 400 mAh helicopter) needed a much lower value (about 268) and reads low with the default. Expect to fine-tune it per aircraft over a few flights:
 
 1. Fly as usual and land. Leave the aircraft powered.
 2. Wait until the voltage has settled (30–60 s).
@@ -120,6 +120,7 @@ VoltFuel is free software under the **GNU General Public License, version 2** (s
 
 ## Changelog
 
+- **0.9.5** — default MinCv changed from 290 to 286 (based on more logs; cautious side).
 - **0.9.4** — README: how to check and calibrate the voltage source before tuning MinCv.
 - **0.9.3** — optional `rMIN` telemetry sensor (the MinCv in use) for the SD log.
 - **0.9.2** — segmented bar graph; zeros instead of a "No telemetry" message before the first value.

@@ -2,6 +2,12 @@
 
 The version number is shared by the widget, the tools on the radio and the PC tools.
 
+## 0.9.5
+
+### Changed
+- The default MinCv is now **286** (was 290), based on more logs; it is a little high on purpose, so that the first readings are cautious.
+- **Tune** (radio and PC) no longer stops at three logs: the radio analyses up to 8 usable logs by default (1–20 in *Settings*, looking at the newest 30), and both tools mark the logs that were flown with a MinCv close to the suggestion (±5) with `*` and summarise how they came out (final sBAT − resting conversion).
+
 ## 0.9.4
 
 ### Added

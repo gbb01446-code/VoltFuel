@@ -1,4 +1,4 @@
-# VoltFuel Support Notes (0.9.4)
+# VoltFuel Support Notes (0.9.5)
 
 These notes summarize how VoltFuel works and how to tune it. Paste them into an AI chat to get help. 日本語: [SUPPORT_NOTES.ja.md](SUPPORT_NOTES.ja.md)
 
@@ -17,7 +17,7 @@ Telemetry sensors: `sBAT` (always); `rBAT`, `rCEL` (cell voltage) and `rMIN` (th
 | Cells | 0 | 0 = auto-detect (re-checked for the first 8 s, then locked) |
 | ResPct | 35 | Reserve: the point on the curve shown as 0 % |
 | FallMv | 50 | Sag filter (mV/s). A limit on the Source voltage |
-| MinCv | 290 | "Empty" cell voltage ×100. The main tuning knob |
+| MinCv | 286 | "Empty" cell voltage ×100. The main tuning knob |
 | MaxCv | 410 | "Full" cell voltage ×100 |
 | ResetSw | – | On the rising edge, jumps to the `rBAT`-style value |
 | ExtraTelem | off | Publishes `rBAT`, `rCEL`, `rMIN` |
@@ -36,7 +36,7 @@ Key property: **the final sBAT is set by the lowest filtered cell voltage of the
 - sBAT **higher** than the conversion → **raise** MinCv. **Lower** → **lower** it.
 - One step (0.01 V) changes sBAT by 0.3–1 point; flight-to-flight scatter is ±3–5 points. Move in steps of **5–10** and judge over **about three flights**.
 - ResPct acts in the same direction (a larger effect per step). If you change ResPct, tune MinCv again.
-- Examples (the author's data; they depend on aircraft and calibration): 6S LiPo aircraft 283–298; a small 2S LiPo-HV helicopter 258–277.
+- Examples (the author's data; they depend on aircraft and calibration): 4S and 6S aircraft about 270–298 (centred near 283); a small 2S LiPo-HV helicopter about 258–283 (around 268). The default 286 is a little high on purpose, so that the first readings err on the cautious side.
 - Deeply discharged flights (low resting voltage) tend to read higher than the conversion at the same MinCv. For aircraft flown deep, a somewhat higher MinCv is the safer side.
 
 ## 5. Reading the analyzer (VoltFuel_Tune.html, or Tune on the radio)

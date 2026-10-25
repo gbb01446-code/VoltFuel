@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  VoltFuel_Tune 0.9.4 -- MinCv tuning helper for VoltFuel logs
+  VoltFuel_Tune 0.9.5 -- MinCv tuning helper for VoltFuel logs
   Copyright (C) 2026 Masayuki
   License: GNU General Public License, version 2 (see LICENSE).
   Part of the VoltFuel project. Contains per-cell voltage tables from
@@ -14,7 +14,7 @@
   PURPOSE. See the GNU General Public License for more details.
 -->
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VoltFuel_Tune v0.9.4 - MinCv</title><style>
+<title>VoltFuel_Tune v0.9.5 - MinCv</title><style>
 :root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--bd:#ccc;--ac:#087f5b;--bad:#c92a2a}
 @media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eee;--mut:#999;--bd:#444;--ac:#4cc9a0;--bad:#ff8080}}
 body{font:14px system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1050px;margin:0 auto;padding:16px}
@@ -27,7 +27,7 @@ input,select,button{font:inherit;padding:5px;border:1px solid var(--bd);border-r
 th,td{border-bottom:1px solid var(--bd);padding:4px 6px;text-align:right;white-space:nowrap}th{color:var(--mut);font-weight:600}
 td:first-child,th:first-child{text-align:left}.rec{color:var(--ac);font-weight:700}.bad{color:var(--bad)}
 .box{border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin:12px 0}</style></head><body>
-<div style="display:flex;justify-content:space-between;align-items:start"><div><h1>VoltFuel_Tune <span class="m">(MinCv) v0.9.4</span></h1>
+<div style="display:flex;justify-content:space-between;align-items:start"><div><h1>VoltFuel_Tune <span class="m">(MinCv) v0.9.5</span></h1>
 <div class="m" id="priv"></div></div><button id="lg">EN</button></div>
 <div class="g">
 <label><span data-i="bt"></span><select id="bt"><option value="0">LiPo</option><option value="1">LiPo-HV</option><option value="2">Li-Ion</option><option value="3">LiFePO4</option></select></label>
@@ -79,22 +79,29 @@ function group(rs,minSens){const ok=rs.filter(r=>!r.err&&!r.skip&&Math.abs(r.sen
 
 const I={ja:{priv:'ログはこのブラウザの中だけで処理されます。外部には送信されません。',bt:'電池の種類',ce:'セル数(0=自動)',co:'電圧の列(Source)',dz:'SDカードの CSV ログを選択(複数可)、またはここにドロップ',
  th:['ファイル','セル','時間(s)','静止電圧/セル','静止換算%','ログの最終sBAT','使用MinCv','再現差','合わせるMinCv','感度'],
- g:'機体ごとの推奨 MinCv',gk:'推奨',gr:'誤差RMS',gn:'フライト数',low:'MinCv の影響が小さいため集計から除外',err:'読み込めません(Time または電圧の列がありません)',short:'有効なデータが少なすぎます',skp:'スキップ',sk:{short:'短すぎる(60秒未満)',flight:'飛行の形跡なし',rest:'末尾に静止区間なし'},
+ g:'機体ごとの推奨 MinCv',gk:'推奨',gr:'誤差RMS',gn:'フライト数',nr:'これに近い MinCv で飛んだログ',nd:'最終 sBAT − 静止換算 平均',nn:'この MinCv ±5 で飛んだログはありません',low:'MinCv の影響が小さいため集計から除外',err:'読み込めません(Time または電圧の列がありません)',short:'有効なデータが少なすぎます',skp:'スキップ',sk:{short:'短すぎる(60秒未満)',flight:'飛行の形跡なし',rest:'末尾に静止区間なし'},
  nt:'「静止換算%」は、ログ末尾30秒の平均電圧を BattAnalog の表で換算した値です(実測の mAh ではありません)。「合わせるMinCv」は、最終 sBAT がその換算値に一致する MinCv(シミュレーション)です。「再現差」はログに rMIN があるとき、シミュレーションとログの最終 sBAT の差で、±3 を超えるなら ResPct・FallMv・MaxCv の設定がログ取得時と違う可能性があります。感度は MinCv 1ステップ(0.01V)あたりの sBAT の変化(pt)です。飛行していないログ・短すぎるログ・末尾に静止区間がないログは、自動でスキップされます。電圧センサーが較正されていないと、結果もずれます。推定値であり、着陸判断の唯一の基準にしないでください。'},
  en:{priv:'Logs are processed only inside this browser. Nothing is uploaded.',bt:'Battery type',ce:'Cells (0 = auto)',co:'Voltage column (Source)',dz:'Choose the CSV logs from the SD card (several allowed) or drop them here',
  th:['File','Cells','Time (s)','Rest V/cell','Rest conv %','Logged final sBAT','MinCv used','Model diff','MinCv to match','Sens.'],
- g:'Recommended MinCv per aircraft',gk:'Recommended',gr:'RMS error',gn:'Flights',low:'excluded: MinCv has little effect',err:'Cannot read (no Time or voltage column)',short:'Too little valid data',skp:'skipped',sk:{short:'too short (< 60 s)',flight:'no flight',rest:'no rest at the end'},
+ g:'Recommended MinCv per aircraft',gk:'Recommended',gr:'RMS error',gn:'Flights',nr:'Logs flown near',nd:'final sBAT − Rest conv, avg',nn:'No log was flown within ±5 of it',low:'excluded: MinCv has little effect',err:'Cannot read (no Time or voltage column)',short:'Too little valid data',skp:'skipped',sk:{short:'too short (< 60 s)',flight:'no flight',rest:'no rest at the end'},
  nt:'"Rest conv %" converts the mean voltage of the last 30 s of the log with the BattAnalog table (it is not a measured mAh figure). "MinCv to match" is the MinCv for which the simulated final sBAT equals that value. "Model diff" (only if the log has rMIN) is simulation minus logged final sBAT; beyond ±3 your ResPct, FallMv or MaxCv probably differ from those used for the log. Sens. is the sBAT change per MinCv step (0.01 V) in points. Logs without a flight, logs that are too short and logs without a resting stretch at the end are skipped automatically. If the voltage sensor is not calibrated, the results are off too. These are estimates; never use them as your only landing criterion.'}};
 let L='ja',files=[];const $=i=>document.getElementById(i),f1=(x,d=1)=>x==null||isNaN(x)?'–':x.toFixed(d);
 function tx(){document.querySelectorAll('[data-i]').forEach(e=>e.textContent=I[L][e.dataset.i]);$('priv').textContent=I[L].priv;$('nt').textContent=I[L].nt;$('lg').textContent=L=='ja'?'EN':'JA';run()}
 function opts(){return{t:+$('bt').value,cells:+$('ce').value,res:+$('rs').value,fall:+$('fa').value,mx:+$('mx').value/100,col:$('co').value}}
-function run(){const o=opts(),T=I[L],rs=files.map(f=>analyze(f.name,f.txt,o));let h='<div class=w><table><tr>'+T.th.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
+function run(){const o=opts(),T=I[L],rs=files.map(f=>analyze(f.name,f.txt,o)),ms={},gs={};
+ rs.filter(r=>!r.err&&!r.skip).forEach(r=>(ms[r.model]=ms[r.model]||[]).push(r));for(const m in ms)gs[m]=group(ms[m],0.15);
+ const nr=r=>gs[r.model]&&r.used!=null&&Math.abs(r.used-gs[r.model].k)<=5;
+ let h='<div class=w><table><tr>'+T.th.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
  rs.forEach(r=>{h+=r.skip?`<tr class=m><td>${r.name}</td><td colspan=9>${T.skp}: ${T.sk[r.skip]}</td></tr>`:r.err?`<tr><td>${r.name}</td><td colspan=9 class=bad>${T[r.err=='col'?'err':'short']}</td></tr>`:
-  `<tr><td>${r.name}</td><td>${r.c}</td><td>${r.dur.toFixed(0)}</td><td>${r.vc.toFixed(3)}</td><td>${r.conv}</td><td>${f1(r.logged,0)}</td><td>${r.used??'–'}</td><td class="${r.chk!=null&&Math.abs(r.chk)>3?'bad':''}">${f1(r.chk)}</td><td class=rec>${r.rec}</td><td>${f1(r.sens,2)}</td></tr>`});
- h+='</table></div>';const ms={};rs.filter(r=>!r.err&&!r.skip).forEach(r=>(ms[r.model]=ms[r.model]||[]).push(r));
- h+=`<div class=box><b>${T.g}</b>`;for(const m in ms){const g=group(ms[m],0.15),lo=ms[m].filter(r=>Math.abs(r.sens)<0.15).length;
-  h+=`<p>${m}: `+(g?`${T.gk} <span class=rec>${g.k}</span> (${T.gr} ${g.rms.toFixed(1)}, ${T.gn} ${g.n})`:'–')+(lo?` <span class=m>[${lo}: ${T.low}]</span>`:'')+'</p>'}
+  `<tr><td>${r.name}</td><td>${r.c}</td><td>${r.dur.toFixed(0)}</td><td>${r.vc.toFixed(3)}</td><td>${r.conv}</td><td>${f1(r.logged,0)}</td><td class="${nr(r)?'rec':''}">${r.used??'–'}${nr(r)?'*':''}</td><td class="${r.chk!=null&&Math.abs(r.chk)>3?'bad':''}">${f1(r.chk)}</td><td class=rec>${r.rec}</td><td>${f1(r.sens,2)}</td></tr>`});
+ h+='</table></div>'+`<div class=box><b>${T.g}</b>`;
+ for(const m in ms){const g=gs[m],lo=ms[m].filter(r=>Math.abs(r.sens)<0.15).length;
+  h+=`<p>${m}: `+(g?`${T.gk} <span class=rec>${g.k}</span> (${T.gr} ${g.rms.toFixed(1)}, ${T.gn} ${g.n})`:'–')+(lo?` <span class=m>[${lo}: ${T.low}]</span>`:'');
+  if(g){const nn=ms[m].filter(r=>nr(r)&&r.logged!=null),d=nn.map(r=>r.logged-r.conv);
+   h+=`<br><span class=m>`+(nn.length?`${T.nr} ${g.k}±5 (*): n=${nn.length}, ${T.nd} ${(d.reduce((a,b)=>a+b,0)/d.length).toFixed(1)} (${Math.min(...d).toFixed(0)}..${Math.max(...d).toFixed(0)})`:`${T.nn}`)+`</span>`}
+  h+='</p>'}
  $('out').innerHTML=h+'</div>'}
+
 function cols(){const H=parse(files[0].txt).H.filter(h=>/\(V\)$/.test(h)),p=['RxBt(V)','Vbat(V)','VFAS(V)'].find(x=>H.includes(x))||H[0];$('co').innerHTML=H.map(h=>`<option ${h==p?'selected':''}>${h}</option>`).join('')}
 async function load(fl){files=[];for(const f of fl)files.push({name:f.name,txt:await f.text()});if(files.length){cols();run()}}
 $('fi').onchange=e=>load(e.target.files);const dz=$('dz');dz.ondragover=e=>e.preventDefault();dz.ondrop=e=>{e.preventDefault();load(e.dataTransfer.files)};

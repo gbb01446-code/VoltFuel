@@ -33,7 +33,8 @@ local TAIL_SEC = 30       -- resting voltage = mean of the last TAIL_SEC s
 local TAIL_RANGE = 0.06   -- V/cell: largest spread allowed in that tail
 local MIN_RECOVER = 0.03  -- V/cell: the tail must be above the lowest point
 local MIN_SENS = 0.15     -- points per MinCv step: below this a log is left out
-local MAX_SCAN = 15       -- newest logs looked at per aircraft
+local MAX_SCAN = 30       -- newest logs looked at per aircraft
+local NEAR = 5            -- "flown near the recommendation" = used MinCv within +-NEAR
 
 local BT_NAMES = { "LiPo", "LiPo-HV", "Li-Ion", "LiFePO4" }
 local TOP = { 4.30, 4.45, 4.30, 3.50 }
@@ -44,7 +45,7 @@ local SET = {
   { "ResPct", 0, 60, 1, 35 },
   { "FallMv", 10, 200, 5, 50 },
   { "MaxCv x100", 380, 440, 1, 410 },
-  { "Logs to use", 1, 8, 1, 3 },
+  { "Logs to analyse", 1, 20, 1, 8 },
 }
 local cfg = {}
 
@@ -384,6 +385,18 @@ local function groupStep()
       return pass()
     end
     final = { k = bk, rms = math.sqrt(bs / #G), n = #G }
+    -- logs that were flown with a MinCv close to the recommendation: how did they come out?
+    local n, sum, lo, hi = 0, 0, 1e9, -1e9
+    for _, r in ipairs(results) do
+      if not r.skip and r.used and r.logged and math.abs(r.used - bk) <= NEAR then
+        local d = r.logged - r.conv
+        r.near = true
+        n, sum = n + 1, sum + d
+        if d < lo then lo = d end
+        if d > hi then hi = d end
+      end
+    end
+    final.near = n > 0 and { n = n, avg = sum / n, lo = lo, hi = hi } or { n = 0 }
   end
   pass = function()
     for k = lo, hi do
@@ -459,7 +472,18 @@ local function drawResult()
   else
     L.txt(10, 28, "No usable log (see the list below)", SMLSIZE, C.warn)
   end
-  local hy = 52
+  if final and final.near then
+    local nr = final.near
+    local line
+    if nr.n > 0 then
+      line = string.format("Flown at %d+-%d: n=%d  sBAT-Conv avg %+.1f (%+d..%+d)", final.k, NEAR, nr.n,
+        nr.avg, math.floor(nr.lo + 0.5), math.floor(nr.hi + 0.5))
+    else
+      line = string.format("No log was flown at MinCv %d+-%d", final.k, NEAR)
+    end
+    L.txt(10, 47, line, SMLSIZE, C.blue)
+  end
+  local hy = 66
   local heads = { "Log", "S", "V/c", "Conv", "sBAT", "Used", "Match", "", "Sens" }
   for i = 1, #heads do L.txt(COLX[i], hy, heads[i], SMLSIZE, C.dim) end
   local rows = math.floor((LCD_H - hy - 36) / 18)
@@ -475,7 +499,8 @@ local function drawResult()
       L.txt(COLX[3], y, string.format("%.2f", r.vc), SMLSIZE)
       L.txt(COLX[4], y, tostring(r.conv), SMLSIZE)
       L.txt(COLX[5], y, r.logged and string.format("%d", math.floor(r.logged + 0.5)) or "-", SMLSIZE)
-      L.txt(COLX[6], y, r.used and tostring(r.used) or "-", SMLSIZE)
+      L.txt(COLX[6], y, r.used and (tostring(r.used) .. (r.near and "*" or "")) or "-", SMLSIZE,
+        r.near and C.blue or C.text)
       L.txt(COLX[7], y, r.rec and tostring(r.rec) or "...", SMLSIZE, C.ok)
       if r.chk and math.abs(r.chk) > 3 then L.txt(COLX[8], y, "!", SMLSIZE, C.err) end
       L.txt(COLX[9], y, r.sens and string.format("%.1f", r.sens) or "", SMLSIZE,
